@@ -1,0 +1,29 @@
+{
+  "name": "vue-immer-state",
+  "version": "1.0.1",
+  "description": "Vue state management using immer",
+  "keywords": [
+    "vue",
+    "store",
+    "state",
+    "immer",
+    "immutable"
+  ],
+  "main": "index.js",
+  "repository": "https://github.com/ntrpy/vue-immer-state.git",
+  "author": "ntrpy <github@ntrpy.com>",
+  "license": "MIT",
+  "dependencies": {
+    "immer": "^9.0.17",
+    "vue": "^3.2.45"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.2.5",
+    "jest": "^29.3.1",
+    "ts-jest": "^29.0.3",
+    "typescript": "^4.9.4"
+  },
+  "scripts": {
+    "test": "jest"
+  }
+}
