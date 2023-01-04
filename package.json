@@ -1,6 +1,6 @@
 {
   "name": "vue-immer-state",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Vue state management using immer",
   "keywords": [
     "vue",
