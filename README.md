@@ -1,8 +1,74 @@
 # vue-immer-state
 
-vue-immer-state is a minimalistic approach for state management in Vue using immer.
+## Purpose
+vue-immer-state is a minimalistic approach 
+for state management in Vue using immer.
 
-As a simple example, import createState() into your code and define your root state:
+## Description
+A State - in the sense of this library - is comprised of a reference to an immutable value, 
+together with a method named commit to allow for changes to the value.
+
+```typescript
+type State<T> = DeepReadonly<{
+    ref: Ref<T>
+    commit?: (updater: (value: T) => void) => void
+}>
+```
+
+Let's begin with a simple example, how you would define the state of a User model:
+
+```typescript
+import { createState } from 'vue-immer-state'
+
+type User = { name: string }
+
+const userState = createState<User>({ name: 'Foo' })
+```
+
+You can mutate its value by committing an update-method:
+
+```typescript
+// before
+console.log(userState.ref.value.name)
+> 'Foo'
+
+userState.commit?.(
+    (user) => { user.name = 'Bar' }
+)
+
+// after
+console.log(userState.ref.value.name)
+> 'Bar'
+```
+
+For any details on how update-methods work, please take a look at the documentation of the great immer project: https://immerjs.github.io/immer/
+
+If you define your state as readonly, or if you pass a readonly reference, 
+createState will not provide you with a commit-method:
+
+```typescript
+const userState = createState<User>(
+  computed(() => appState.ref.value.user)
+)
+
+// or
+const userState = createState<User>({ name: 'Foo' }, **true**)
+
+// before
+console.log(userState.ref.value.name)
+> 'Foo'
+
+// this has no effect
+userState.commit?.(
+    (user) => { user.name = 'Bar' }
+)
+
+// after
+console.log(userState.ref.value.name)
+> 'Foo'
+```
+
+Let's take a look at a more complex example and derive a User state from an App state:
 
 ```typescript
 import { createState } from 'vue-immer-state'
@@ -13,31 +79,41 @@ type App  = { user: User }
 const appState = createState<App>(
   { user: { name: 'Foo' } }
 )
+
+const userState = createState<User>(
+  computed({
+    get () { 
+      return appState.ref.value.user 
+    },
+    set (value) { 
+      appState.commit?.((app) => { app.user = value }) 
+    }
+  })
+)
 ```
 
-Every state offers an immutable reference to its stored value and (optionally) a commit method to update it.
-
-Let's derive a user state from our app state:
+Now, whenever we commit changes to the User state, this in turn updates the App state instead.
+The changes then trickle down again to the reactive User state.
 
 ```typescript
-const userState = createState<User>(computed({
-  get () { 
-    return appState.ref.value.user 
-  },
+// before
+console.log(userState.ref.value.name)
+> 'Foo'
+console.log(appState.ref.value.user.name)
+> 'Foo'
 
-  set (value) { 
-    appState.commit?.((app) => { app.user = value }) 
-  }
-}))
+userState.commit?.(
+    (user) => { user.name = 'Bar' }
+)
+
+// after
+console.log(userState.ref.value.name)
+> 'Bar'
+console.log(appState.ref.value.user.name)
+> 'Bar'
 ```
 
-States are used as props on your components: 
-
-```html
-<User :user-state="userState" />
-```
-
-In your components you would then expect to receive States instead of the native types:
+For states to work as prop values, you need to define your components properties as such:
 
 ```html
 <script setup lang="ts">
@@ -54,35 +130,21 @@ In your components you would then expect to receive States instead of the native
 </template>
 ```
 
-Passing entire states to components prevents Vue from auto-unwrapping bare references, which is sometimes undesirable.
+Now passing state is straightforward:
 
-Use the commit method to update any state:
-
-```typescript
-userState.commit?.(
-    (user) => { user.name = 'Bar' }
-)
+```html
+<User :user-state="userState" />
 ```
 
-This walks up the dependency chain to the root state and updates its stored value.
+## Installation 
+Use npm or yarn to install: 
 
-If you define your state as readonly, or if you pass a readonly reference, then createState() will not provide the commit():
-
-```typescript
-const userState = createState<User>(computed(
-    () => appState.ref.value.user
-))
+```
+> npm i ntrpy/vue-immer-state
 
 or 
 
-const userState = createState<User>({ name: 'Foo' }, true)
-
-// the following does nothing
-userState.commit?.(
-    (user) => { user.name = 'Bar' }
-)
+> yarn add ntrpy/vue-immer-state
 ```
-
-That's about it. For any further explanation on how to use the updater methods of immer, please confer their excellent project and its documentation: https://immerjs.github.io/immer/
 
 Have fun!
